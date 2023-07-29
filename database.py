@@ -1,10 +1,9 @@
-from typing import Optional
-
 import bcrypt  # scrypt can be hard to install.
 import sqlite3
 import sqlalchemy
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import declarative_base, Session
+from typing import Optional
 
 
 DB_NAME = "gptutor.sqlite"

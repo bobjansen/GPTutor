@@ -93,15 +93,18 @@ def layout():
     ]
 
 
-@callback(Output("nav-Login", "style"), [Input("url", "pathname")])
+@callback(
+    [Output("nav-Login", "style"), Output("nav-Logout", "style")],
+    [Input("url", "pathname")],
+)
 def display_page(href):
     if href is None:
         raise exceptions.PreventUpdate
-    username = flask.session.get("username")
-    if username is None:
-        return {"display": "block"}
+    user = flask.session.get("user")
+    if user is None:
+        return [{"display": "block"}, {"display": "none"}]
     else:
-        return {"display": "none"}
+        return [{"display": "none"}, {"display": "block"}]
 
 
 @callback(
