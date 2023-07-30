@@ -1,49 +1,48 @@
+from typing import Dict, List
+
 import flask
-from dash import callback, dcc, exceptions, html, register_page, Output, Input
 import time
+
+
+from dash import callback, dcc, exceptions, html, register_page, Output, Input
+
+import gpt
 from prompts import ask_exercise
 import dash_bootstrap_components as dbc
+import settings
 
 register_page(__name__, path="/")
 
+
+def options_from_settings_key(key: str) -> List[Dict[str, str]]:
+    return [{"label": val, "value": val} for val in settings.app_settings[key]]
+
+
 dropdown_level = dcc.Dropdown(
     id="level-dropdown",
-    options=[
-        {"label": "Easy", "value": "Easy"},
-        {"label": "Medium", "value": "Medium"},
-        {"label": "Hard", "value": "Hard"},
-    ],
-    value="Easy",
+    options=options_from_settings_key("levels"),
     clearable=False,
 )
 
 dropdown_topic = dcc.Dropdown(
     id="topic-dropdown",
-    options=[
-        {"label": "C++", "value": "C++"},
-        {"label": "Calculus", "value": "Calculus"},
-        {"label": "Python", "value": "Python"},
-        {"label": "R", "value": "R"},
-        {"label": "SQL", "value": "SQL"},
-    ],
-    value="Python",
+    options=options_from_settings_key("topics"),
     clearable=False,
 )
 
 dropdown_time = dcc.Dropdown(
     id="time-dropdown",
-    options=[
-        {"label": "15 minutes", "value": "15 minutes"},
-        {"label": "30 minutes", "value": "30 minutes"},
-        {"label": "60 minutes", "value": "60 minutes"},
-    ],
-    value="15 minutes",
+    options=options_from_settings_key("durations"),
     clearable=False,
 )
 
 prompt_description = html.Div(id="prompt-description", style={"fontSize:": 16})
+exercise_description = html.Div(id="exercise-description", style={"fontSize:": 16})
 
-start_button = dbc.Button("Start", id="start-button", color="primary", n_clicks=0)
+
+start_button = dbc.Button(
+    "Start", id="start-button", color="primary", n_clicks=0, disabled=True
+)
 timer = dcc.Interval(
     id="interval-component", interval=1000, max_intervals=0
 )  # interval in milliseconds
@@ -74,6 +73,8 @@ def layout():
             className="m-2",
         ),
         prompt_description,
+        html.Hr(),
+        exercise_description,
         html.Div(style={"height": "20px"}),
         html.Div(
             [
@@ -113,17 +114,26 @@ def display_page(href):
         Output("start-button", "color"),
         Output("interval-component", "max_intervals"),
         Output("timer-start-in-seconds", "data"),
+        Output("exercise-description", "children"),
     ],
     [
         Input("start-button", "n_clicks"),
+        Input("level-dropdown", "value"),
+        Input("topic-dropdown", "value"),
+        Input("time-dropdown", "value"),
     ],
     prevent_initial_call=True,
 )
-def toggle_timer(n_clicks):
-    """Toggle the stopwatch timer"""
+def start_exercise(n_clicks, level, topic, duration):
+    """Start the exercise: show the result of the prompt and start the timer"""
     if n_clicks % 2 == 0:
-        return ["Start", "primary", 0, None]
-    return ["Done", "success", -1, time.time()]
+        return ["Start", "primary", 0, None, ""]
+
+    prompt = ask_exercise.format(level, topic, duration)
+    exercise = gpt.get_completion([{"role": "user", "content": prompt}])["message"][
+        "content"
+    ]
+    return ["Done", "success", -1, time.time(), exercise]
 
 
 @callback(
@@ -153,7 +163,10 @@ def update_timer(_, timer_start):
 
 
 @callback(
-    Output("prompt-description", "children"),
+    [
+        Output("prompt-description", "children"),
+        Output("start-button", "disabled"),
+    ],
     [
         Input("start-button", "n_clicks"),
         Input("level-dropdown", "value"),
@@ -163,5 +176,8 @@ def update_timer(_, timer_start):
     prevent_initial_call=True,
 )
 def show_prompt(_, level, topic, duration):
-    prompt = create_exercise_prompt(level, topic, duration)
-    return prompt
+    if level is not None and topic is not None and duration is not None:
+        prompt = ask_exercise.format(level, topic, duration)
+
+        return [prompt, False]
+    return ["", True]

@@ -20,7 +20,8 @@ class User(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     username = sqlalchemy.Column(sqlalchemy.Text, unique=True, nullable=False)
     email = sqlalchemy.Column(sqlalchemy.Text, unique=True, nullable=False)
-    password = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+    # Specify type to silence a PyCharm warning.
+    password: bytes = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
 
 
 class Exercise(Base):

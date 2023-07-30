@@ -27,7 +27,9 @@ def layout():
                 [
                     dbc.Label("Password:", html_for="password", width=1),
                     dbc.Col(
-                        dbc.Input(id="password", type="text", placeholder="Password"),
+                        dbc.Input(
+                            id="password", type="password", placeholder="Password"
+                        ),
                         width=2,
                     ),
                 ],
