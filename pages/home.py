@@ -7,7 +7,7 @@ import time
 from dash import callback, dcc, exceptions, html, register_page, Output, Input
 
 import gpt
-from prompts import ask_exercise
+from prompts import ask_exercise, ask_title
 import dash_bootstrap_components as dbc
 import settings
 
@@ -70,11 +70,17 @@ def layout():
                 dropdown_time,
                 html.Div(style={"height": "20px"}),
             ],
+            id="exercise-options",
             className="m-2",
         ),
-        prompt_description,
-        html.Hr(),
-        exercise_description,
+        dbc.Container(
+            [
+                prompt_description,
+                html.Hr(),
+                html.H3("", id="exercise-title"),
+                exercise_description,
+            ]
+        ),
         html.Div(style={"height": "20px"}),
         html.Div(
             [
@@ -114,7 +120,9 @@ def display_page(href):
         Output("start-button", "color"),
         Output("interval-component", "max_intervals"),
         Output("timer-start-in-seconds", "data"),
+        Output("exercise-title", "children"),
         Output("exercise-description", "children"),
+        Output("exercise-options", "style"),
     ],
     [
         Input("start-button", "n_clicks"),
@@ -127,13 +135,24 @@ def display_page(href):
 def start_exercise(n_clicks, level, topic, duration):
     """Start the exercise: show the result of the prompt and start the timer"""
     if n_clicks % 2 == 0:
-        return ["Start", "primary", 0, None, ""]
+        return ["Start", "primary", 0, None, "", "", {"display": "block"}]
 
     prompt = ask_exercise.format(level, topic, duration)
-    exercise = gpt.get_completion([{"role": "user", "content": prompt}])["message"][
-        "content"
+    messages = [{"role": "user", "content": prompt}]
+    exercise = gpt.get_completion(messages)["message"]["content"]
+    messages += [{"role": "assistant", "content": exercise}]
+    messages += [{"role": "user", "content": ask_title}]
+    title = gpt.get_completion(messages)["message"]["content"]
+
+    return [
+        "Done",
+        "success",
+        -1,
+        time.time(),
+        title,
+        exercise,
+        {"display": "none"},
     ]
-    return ["Done", "success", -1, time.time(), exercise]
 
 
 @callback(
