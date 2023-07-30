@@ -163,4 +163,5 @@ def update_timer(_, timer_start):
     prevent_initial_call=True,
 )
 def show_prompt(_, level, topic, duration):
-    return ask_exercise.format(level, topic, duration)
+    prompt = create_exercise_prompt(level, topic, duration)
+    return prompt
