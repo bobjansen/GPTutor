@@ -70,8 +70,6 @@ def layout():
 )
 def login_user(_, email, password):
     session = flask.session
-    print(session)
-    session["foo"] = "bar"
     if email is None or password is None:
         raise exceptions.PreventUpdate
     user = database.verify_password(email, password)
