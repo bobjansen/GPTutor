@@ -24,7 +24,7 @@ class User(Base):
 
 
 class Exercise(Base):
-    __tablename__ = "exercices"
+    __tablename__ = "exercises"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     user = sqlalchemy.ForeignKey(User.id)
