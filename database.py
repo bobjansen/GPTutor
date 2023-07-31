@@ -69,11 +69,14 @@ def create_user(username, email: str, password: str):
 def verify_password(email: str, password: str) -> Optional[User]:
     """Verify that the password matches the given user"""
     with Session(engine) as session:
-        user = session.scalars(select(User).where(email == User.email)).one()
-        if user is None:
+        # Warning about sqlalchemy.exc.NoResultFound to be missing seems spurious
+        # noinspection PyUnresolvedReferences
+        try:
+            user = session.scalars(select(User).where(email == User.email)).one()
+            if bcrypt.checkpw(bytes(password, "utf-8"), user.password):
+                return user
+        except sqlalchemy.exc.NoResultFound:
             return None
-        if bcrypt.checkpw(bytes(password, "utf-8"), user.password):
-            return user
         return None
 
 
