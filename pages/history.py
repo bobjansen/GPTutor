@@ -1,4 +1,5 @@
 """Display the exercise history"""
+import datetime
 import flask
 from dash import html, register_page
 import dash_bootstrap_components as dbc
@@ -27,7 +28,12 @@ def layout():
         dbc.Table(
             [html.Thead(html.Tr([html.Th("Title"), html.Th("Timestamp")]))]
             + [
-                html.Tr([html.Td(row.title), html.Td(row.start_timestamp)])
+                html.Tr(
+                    [
+                        html.Td(row.title.replace("Title: ", "")),
+                        html.Td(datetime.datetime.fromtimestamp(row.start_timestamp)),
+                    ]
+                )
                 for row in exercises
             ]
         ),
