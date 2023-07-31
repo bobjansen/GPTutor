@@ -1,15 +1,15 @@
 from typing import Dict, List
-
 import flask
 import time
-
-
 from dash import callback, dcc, exceptions, html, register_page, Output, Input
-
-import gpt
-from prompts import ask_exercise, ask_title
 import dash_bootstrap_components as dbc
+import sqlalchemy
+
+import database
+import gpt
 import settings
+from prompts import ask_exercise, ask_title
+
 
 register_page(__name__, path="/")
 
@@ -79,7 +79,13 @@ def layout():
                 html.Hr(),
                 html.H3("", id="exercise-title"),
                 exercise_description,
-            ]
+                html.H3("Answer"),
+                dbc.Form(
+                    dbc.Textarea(id="exercise-answer", size="lg", style={"height": 200})
+                ),
+            ],
+            id="exercise-main",
+            style={"display": "none"},
         ),
         html.Div(style={"height": "20px"}),
         html.Div(
@@ -123,6 +129,7 @@ def display_page(href):
         Output("exercise-title", "children"),
         Output("exercise-description", "children"),
         Output("exercise-options", "style"),
+        Output("exercise-main", "style"),
     ],
     [
         Input("start-button", "n_clicks"),
@@ -135,7 +142,16 @@ def display_page(href):
 def start_exercise(n_clicks, level, topic, duration):
     """Start the exercise: show the result of the prompt and start the timer"""
     if n_clicks % 2 == 0:
-        return ["Start", "primary", 0, None, "", "", {"display": "block"}]
+        return [
+            "Start",
+            "primary",
+            0,
+            None,
+            "",
+            "",
+            {"display": "block"},
+            {"display": "none"},
+        ]
 
     prompt = ask_exercise.format(level, topic, duration)
     messages = [{"role": "user", "content": prompt}]
@@ -144,14 +160,26 @@ def start_exercise(n_clicks, level, topic, duration):
     messages += [{"role": "user", "content": ask_title}]
     title = gpt.get_completion(messages)["message"]["content"]
 
+    start_time = time.time()
+
+    user = flask.session.get("user")
+    if user is not None:
+        session = database.Session(database.engine)
+        # noinspection PyTypeChecker
+        user = session.scalars(
+            sqlalchemy.select(database.User).where(user["id"] == database.User.id)
+        ).first()
+        database.save_exercise(session, user, title, start_time)
+
     return [
         "Done",
         "success",
         -1,
-        time.time(),
+        start_time,
         title,
         exercise,
         {"display": "none"},
+        {"display": "block"},
     ]
 
 

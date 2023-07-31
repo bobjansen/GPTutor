@@ -1,7 +1,5 @@
 import sys
 from typing import Dict
-
-
 from dash import page_container, page_registry, Dash
 import dash_bootstrap_components as dbc
 

@@ -1,7 +1,6 @@
-from dash import callback, dcc, exceptions, register_page, Output, Input, State
+from dash import register_page
 import flask
 import dash_bootstrap_components as dbc
-import database
 
 register_page(__name__)
 

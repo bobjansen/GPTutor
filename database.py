@@ -2,14 +2,14 @@ import bcrypt  # scrypt can be hard to install.
 import sqlite3
 import sqlalchemy
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import declarative_base, Session
+from sqlalchemy.orm import declarative_base, relationship, Session
 from typing import Optional
 
 
 DB_NAME = "gptutor.sqlite"
 
 conn = sqlite3.connect(DB_NAME)
-engine = create_engine("sqlite:///" + DB_NAME)
+engine = create_engine("sqlite:///" + DB_NAME, echo=True)
 
 Base = declarative_base()
 
@@ -23,12 +23,23 @@ class User(Base):
     # Specify type to silence a PyCharm warning.
     password: bytes = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
 
+    exercises = relationship("Exercise", backref="user")
+
+    def __repr__(self) -> str:
+        return f"id={self.id}: {self.email}"
+
 
 class Exercise(Base):
     __tablename__ = "exercises"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    user = sqlalchemy.ForeignKey(User.id)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(User.id))
+    start_timestamp = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    end_timestamp = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    title = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+
+    def __repr__(self) -> str:
+        return f"id={self.id}: By user: {self.user}, started at: {self.start_timestamp}"
 
 
 class Message(Base):
@@ -36,6 +47,7 @@ class Message(Base):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     exercise = sqlalchemy.ForeignKey(Exercise.id)
+    text = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
 
 
 def create_user(username, email: str, password: str):
@@ -54,6 +66,16 @@ def verify_password(email: str, password: str) -> Optional[sqlalchemy.Row]:
         if bcrypt.checkpw(bytes(password, "utf-8"), row.password):
             return row
         return None
+
+
+def save_exercise(
+    session: Session, user: User, title: str, start_timestamp: float
+) -> Exercise:
+    """Save an exercise to the database"""
+    exercise = Exercise(user=user, title=title, start_timestamp=int(start_timestamp))
+    session.add(exercise)
+    session.commit()
+    return exercise
 
 
 if __name__ == "__main__":

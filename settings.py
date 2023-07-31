@@ -6,5 +6,4 @@ with open(sys.argv[1], "r") as yaml_file:
     try:
         app_settings = yaml.safe_load(yaml_file)
     except yaml.YAMLError as e:
-        print(e)
-        app_settings = {}
+        pass

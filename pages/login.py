@@ -1,5 +1,5 @@
-from dash import callback, dcc, exceptions, register_page, Output, Input, State
 import flask
+from dash import callback, dcc, exceptions, register_page, Output, Input, State
 import dash_bootstrap_components as dbc
 import database
 
