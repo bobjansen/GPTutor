@@ -1,0 +1,16 @@
+flask_secret: create using `import secrets; secrets.token_hex(32)
+openai_key: get_your_key_from_open_ai
+durations:
+- 15 minutes
+- 30 minutes
+- 60 minutes
+levels:
+- Easy
+- Medium
+- Hard
+topics:
+- C++
+- Calculus
+- Python
+- R
+- SQL
