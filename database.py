@@ -1,3 +1,4 @@
+"""Database functionality for GPTutor"""
 import bcrypt  # scrypt can be hard to install.
 import sqlite3
 import sqlalchemy
@@ -15,6 +16,8 @@ Base = declarative_base()
 
 
 class User(Base):
+    """Simple database User class"""
+
     __tablename__ = "users"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -30,6 +33,8 @@ class User(Base):
 
 
 class Exercise(Base):
+    """Exercise holds exercise meta data"""
+
     __tablename__ = "exercises"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -43,6 +48,8 @@ class Exercise(Base):
 
 
 class Message(Base):
+    """Records message send and received to the GPT API"""
+
     __tablename__ = "message"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -51,6 +58,7 @@ class Message(Base):
 
 
 def create_user(username, email: str, password: str):
+    """Create a user in the database, hashing with bcrypt"""
     salt = bcrypt.gensalt()
     pwhash = bcrypt.hashpw(bytes(password, "utf-8"), salt)
     with Session(engine) as session:
@@ -58,13 +66,14 @@ def create_user(username, email: str, password: str):
         session.commit()
 
 
-def verify_password(email: str, password: str) -> Optional[sqlalchemy.Row]:
+def verify_password(email: str, password: str) -> Optional[User]:
+    """Verify that the password matches the given user"""
     with Session(engine) as session:
-        row = session.scalars(select(User).where(email == User.email)).one()
-        if row is None:
+        user = session.scalars(select(User).where(email == User.email)).one()
+        if user is None:
             return None
-        if bcrypt.checkpw(bytes(password, "utf-8"), row.password):
-            return row
+        if bcrypt.checkpw(bytes(password, "utf-8"), user.password):
+            return user
         return None
 
 

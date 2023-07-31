@@ -1,7 +1,8 @@
+"""The home page"""
 from typing import Dict, List
 import flask
 import time
-from dash import callback, dcc, exceptions, html, register_page, Output, Input
+from dash import callback, dcc, html, register_page, Output, Input
 import dash_bootstrap_components as dbc
 import sqlalchemy
 
@@ -15,6 +16,7 @@ register_page(__name__, path="/")
 
 
 def options_from_settings_key(key: str) -> List[Dict[str, str]]:
+    """Transform a list of names to dropdown option values"""
     return [{"label": val, "value": val} for val in settings.app_settings[key]]
 
 
@@ -49,6 +51,7 @@ timer = dcc.Interval(
 
 
 def layout():
+    """Layout of the home page"""
     user = flask.session.get("user")
     if user is None:
         greeting = dbc.Alert("You are not logged in", color="danger")
@@ -104,20 +107,6 @@ def layout():
         ),
         dcc.Store("timer-start-in-seconds"),
     ]
-
-
-@callback(
-    [Output("nav-Login", "style"), Output("nav-Logout", "style")],
-    [Input("url", "pathname")],
-)
-def display_page(href):
-    if href is None:
-        raise exceptions.PreventUpdate
-    user = flask.session.get("user")
-    if user is None:
-        return [{"display": "block"}, {"display": "none"}]
-    else:
-        return [{"display": "none"}, {"display": "block"}]
 
 
 @callback(
@@ -207,24 +196,3 @@ def update_timer(_, timer_start):
     minutes = seconds // 60
     seconds %= 60
     return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
-
-
-@callback(
-    [
-        Output("prompt-description", "children"),
-        Output("start-button", "disabled"),
-    ],
-    [
-        Input("start-button", "n_clicks"),
-        Input("level-dropdown", "value"),
-        Input("topic-dropdown", "value"),
-        Input("time-dropdown", "value"),
-    ],
-    prevent_initial_call=True,
-)
-def show_prompt(_, level, topic, duration):
-    if level is not None and topic is not None and duration is not None:
-        prompt = ask_exercise.format(level, topic, duration)
-
-        return [prompt, False]
-    return ["", True]

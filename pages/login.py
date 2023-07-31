@@ -1,3 +1,4 @@
+"""The login page"""
 import flask
 from dash import callback, dcc, exceptions, register_page, Output, Input, State
 import dash_bootstrap_components as dbc
@@ -7,6 +8,7 @@ register_page(__name__)
 
 
 def layout():
+    """The login page layout"""
     user = flask.session.get("user")
     if user is not None:
         return dbc.Form()
@@ -71,6 +73,7 @@ def layout():
     prevent_initial_call=True,
 )
 def login_user(_, email, password):
+    """Login a user of the login button click"""
     session = flask.session
     if email is None or password is None:
         raise exceptions.PreventUpdate

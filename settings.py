@@ -1,3 +1,4 @@
+"""Load settings on import"""
 import sys
 import yaml
 

@@ -1,3 +1,4 @@
+"""Access the GPT API"""
 import openai
 import settings
 
@@ -10,6 +11,7 @@ def choose_model():
 
 
 def get_completion(messages):
+    """Get the completion given the messages"""
     response = openai.ChatCompletion.create(
         model=choose_model(), messages=messages, n=1
     )

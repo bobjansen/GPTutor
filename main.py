@@ -1,3 +1,4 @@
+"""Setup Dash and run the app"""
 import sys
 from typing import Dict
 from dash import page_container, page_registry, Dash
@@ -5,6 +6,7 @@ import dash_bootstrap_components as dbc
 
 
 def run(app_settings: Dict):
+    """Run the app"""
     app = Dash(
         __name__,
         title="GP Tutor",
