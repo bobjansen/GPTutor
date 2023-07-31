@@ -120,9 +120,7 @@ def create_user(_, username, email, password1, password2):
         if session.query(database.User).where(email == database.User.email).count() > 0:
             return ["E-mail address already used", {"display": "block"}]
 
-        user = database.User(username=username, email=email, password=password1)
-        session.add(user)
-        session.commit()
+        user = database.create_user(session, username, email, password1)
 
         if user is not None:
             flask.session.setdefault("user", {"username": user.username, "id": user.id})

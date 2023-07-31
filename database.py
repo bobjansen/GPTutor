@@ -57,13 +57,24 @@ class Message(Base):
     text = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
 
 
-def create_user(username, email: str, password: str):
-    """Create a user in the database, hashing with bcrypt"""
+def hash_password(password: str) -> bytes:
+    """Hash a password using bcrypt"""
     salt = bcrypt.gensalt()
     pwhash = bcrypt.hashpw(bytes(password, "utf-8"), salt)
-    with Session(engine) as session:
-        session.add(User(username=username, email=email, password=pwhash))
-        session.commit()
+    return pwhash
+
+
+def create_user(session: Session, username, email: str, password: str) -> User:
+    """Create a user in the database, hashing with bcrypt"""
+    user = User(
+        username=username,
+        email=email,
+        password=hash_password(password),
+    )
+    session.add(User(username=username, email=email, password=hash_password(password)))
+    session.commit()
+
+    return user
 
 
 def verify_password(email: str, password: str) -> Optional[User]:
@@ -97,4 +108,5 @@ if __name__ == "__main__":
         given_username = input("Username: ")
         given_email = input("Email: ")
         given_password = input("Password: ")
-        create_user(given_username, given_email, given_password)
+        with Session(engine) as session_:
+            create_user(session_, given_username, given_email, given_password)
