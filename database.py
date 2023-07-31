@@ -54,6 +54,7 @@ class Message(Base):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     exercise = sqlalchemy.ForeignKey(Exercise.id)
+    role = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
     text = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
 
 
@@ -97,7 +98,6 @@ def save_exercise(
     """Save an exercise to the database"""
     exercise = Exercise(user=user, title=title, start_timestamp=int(start_timestamp))
     session.add(exercise)
-    session.commit()
     return exercise
 
 

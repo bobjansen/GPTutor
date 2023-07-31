@@ -147,12 +147,21 @@ def start_exercise(n_clicks, level, topic, duration):
 
     user = flask.session.get("user")
     if user is not None:
-        session = database.Session(database.engine)
-        # noinspection PyTypeChecker
-        user = session.scalars(
-            sqlalchemy.select(database.User).where(user["id"] == database.User.id)
-        ).first()
-        database.save_exercise(session, user, title, start_time)
+        with database.Session(database.engine) as session:
+            # noinspection PyTypeChecker
+            user = session.scalars(
+                sqlalchemy.select(database.User).where(user["id"] == database.User.id)
+            ).first()
+            exercise_obj = database.save_exercise(session, user, title, start_time)
+
+            message_objs = [
+                database.Message(
+                    exercise=exercise_obj, role=message["role"], text=message["content"]
+                )
+                for message in messages
+            ]
+            session.add_all(message_objs)
+            session.commit()
 
     return [
         "Done",
