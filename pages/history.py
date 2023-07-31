@@ -24,13 +24,20 @@ def layout():
     if exercises is None:
         return dbc.Container()
 
+    def format_title(title):
+        """Remove GPT cruft from the title"""
+        title = title.replace("Title: ", "").strip()
+        if title[0] == '"' and title[-1] == '"':
+            title = title[1:-1]
+        return title
+
     return dbc.Container(
         dbc.Table(
             [html.Thead(html.Tr([html.Th("Title"), html.Th("Timestamp")]))]
             + [
                 html.Tr(
                     [
-                        html.Td(row.title.replace("Title: ", "")),
+                        html.Td(format_title(row.title)),
                         html.Td(datetime.datetime.fromtimestamp(row.start_timestamp)),
                     ]
                 )

@@ -80,7 +80,7 @@ def login_user(_, email, password):
     user = database.verify_password(email, password)
     if user is not None:
         session.setdefault("user", {"username": user.username, "id": user.id})
-        # dcc.Location requires an id but we are just after the side effect. id could be anything.
+        # dcc.Location requires an id, but we are just after the side effect. id could be anything.
         return [dcc.Location(pathname="/", id="login-fail"), {"display": "none"}]
     else:
         return ["Failed", {"display": "block"}]
