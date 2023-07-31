@@ -2,7 +2,7 @@
 from typing import Dict, List
 import flask
 import time
-from dash import callback, dcc, exceptions, html, register_page, Output, Input
+from dash import callback, dcc, html, register_page, Output, Input
 import dash_bootstrap_components as dbc
 import sqlalchemy
 
@@ -99,12 +99,6 @@ def layout():
             ],
             className="d-grid gap-2 d-md-flex justify-content-md-start",
         ),
-        html.Div(
-            dcc.Markdown(
-                """Made by Bob Jansen, [source](https://www.github.com/bobjansen)."""
-            ),
-            className="d-flex mt-5 justify-content-center",
-        ),
         dcc.Store("timer-start-in-seconds"),
     ]
 
@@ -196,21 +190,6 @@ def update_timer(_, timer_start):
     minutes = seconds // 60
     seconds %= 60
     return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
-
-
-@callback(
-    [Output("nav-Login", "style"), Output("nav-Logout", "style")],
-    [Input("url", "pathname")],
-)
-def toggle_elements_logged_in(href):
-    """Toggle visibility of elements based on logged in status"""
-    if href is None:
-        raise exceptions.PreventUpdate
-    user = flask.session.get("user")
-    if user is None:
-        return [{"display": "block"}, {"display": "none"}]
-    else:
-        return [{"display": "none"}, {"display": "block"}]
 
 
 @callback(

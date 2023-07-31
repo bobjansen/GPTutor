@@ -1,7 +1,18 @@
 """Setup Dash and run the app"""
+import flask
 import sys
 from typing import Dict
-from dash import page_container, page_registry, Dash
+from dash import (
+    callback,
+    dcc,
+    exceptions,
+    html,
+    page_container,
+    page_registry,
+    Dash,
+    Output,
+    Input,
+)
 import dash_bootstrap_components as dbc
 
 
@@ -24,7 +35,7 @@ def run(app_settings: Dict):
                     dbc.NavItem(
                         dbc.NavLink(
                             page["name"],
-                            id="nav-" + page["name"],
+                            id="nav-" + page["name"].lower().replace(" ", "-"),
                             href=page["relative_path"],
                         )
                     )
@@ -33,10 +44,46 @@ def run(app_settings: Dict):
                 brand="GP Tutor",
             ),
             page_container,
+            html.Div(
+                dcc.Markdown(
+                    """Made by Bob Jansen, [source](https://www.github.com/bobjansen)."""
+                ),
+                className="d-flex mt-5 justify-content-center",
+            ),
         ],
         className="p-5",
     )
     app.run_server(debug=True)
+
+
+@callback(
+    [
+        Output("nav-login", "style"),
+        Output("nav-logout", "style"),
+        Output("nav-create-account", "style"),
+        Output("nav-history", "style"),
+    ],
+    [Input("url", "pathname")],
+)
+def toggle_elements_logged_in(href):
+    """Toggle visibility of elements based on logged in status"""
+    if href is None:
+        raise exceptions.PreventUpdate
+    user = flask.session.get("user")
+    if user is None:
+        return [
+            {"display": "block"},
+            {"display": "none"},
+            {"display": "block"},
+            {"display": "none"},
+        ]
+    else:
+        return [
+            {"display": "none"},
+            {"display": "block"},
+            {"display": "none"},
+            {"display": "block"},
+        ]
 
 
 if __name__ == "__main__":
