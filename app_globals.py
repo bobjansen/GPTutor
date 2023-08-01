@@ -14,11 +14,12 @@ class MessageType(IntEnum):
 
 
 try:
-    with open(sys.argv[1], "r") as yaml_file:
-        print("Loading yaml")  # How often does this actually get loaded by Dash?!
-        try:
-            app_settings = yaml.safe_load(yaml_file)
-        except yaml.YAMLError:
-            pass
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], "r") as yaml_file:
+            print("Loading yaml")  # How often does this actually get loaded by Dash?!
+            try:
+                app_settings = yaml.safe_load(yaml_file)
+            except yaml.YAMLError:
+                pass
 except FileNotFoundError:
     pass
