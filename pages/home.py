@@ -2,7 +2,7 @@
 from typing import Dict, List
 import flask
 import time
-from dash import callback, dcc, html, register_page, Output, Input
+from dash import callback, dcc, html, register_page, Output, Input, State
 import dash_bootstrap_components as dbc
 import sqlalchemy
 
@@ -117,9 +117,11 @@ def layout():
     ],
     [
         Input("start-button", "n_clicks"),
-        Input("level-dropdown", "value"),
-        Input("topic-dropdown", "value"),
-        Input("time-dropdown", "value"),
+    ],
+    [
+        State("level-dropdown", "value"),
+        State("topic-dropdown", "value"),
+        State("time-dropdown", "value"),
     ],
     prevent_initial_call=True,
 )
