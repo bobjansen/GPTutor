@@ -90,6 +90,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("One argument required: the location of the settings yaml file")
     else:
-        import settings
+        import app_globals
 
-        run(settings.app_settings)
+        run(app_globals.app_settings)

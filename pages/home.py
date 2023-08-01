@@ -8,7 +8,8 @@ import sqlalchemy
 
 import database
 import gpt
-import settings
+import app_globals
+from app_globals import MessageType
 from prompts import ask_exercise, ask_title
 
 
@@ -17,7 +18,7 @@ register_page(__name__, path="/")
 
 def options_from_settings_key(key: str) -> List[Dict[str, str]]:
     """Transform a list of names to dropdown option values"""
-    return [{"label": val, "value": val} for val in settings.app_settings[key]]
+    return [{"label": val, "value": val} for val in app_globals.app_settings[key]]
 
 
 dropdown_level = dcc.Dropdown(
@@ -137,11 +138,27 @@ def start_exercise(n_clicks, level, topic, duration):
         ]
 
     prompt = ask_exercise.format(level, topic, duration)
-    messages = [{"role": "user", "content": prompt}]
+    messages = [
+        {
+            "role": "user",
+            "content": prompt,
+            "message_type": MessageType.INITIAL_QUESTION,
+        }
+    ]
     exercise = gpt.get_completion(messages)["message"]["content"]
-    messages += [{"role": "assistant", "content": exercise}]
-    messages += [{"role": "user", "content": ask_title}]
-    title = gpt.get_completion(messages)["message"]["content"]
+    messages += [
+        {
+            "role": "assistant",
+            "content": exercise,
+            "message_type": MessageType.INITIAL_EXERCISE,
+        }
+    ]
+    messages += [
+        {"role": "user", "content": ask_title, "message_type": MessageType.ASK_TITLE}
+    ]
+    title = gpt.get_completion(messages)["message"]
+    title["message_type"] = MessageType.EXERCISE_TITLE
+    messages += [title]
 
     start_time = time.time()
 
@@ -152,11 +169,16 @@ def start_exercise(n_clicks, level, topic, duration):
             user = session.scalars(
                 sqlalchemy.select(database.User).where(user["id"] == database.User.id)
             ).first()
-            exercise_obj = database.save_exercise(session, user, title, start_time)
+            exercise_obj = database.save_exercise(
+                session, user, title["content"], start_time
+            )
 
             message_objs = [
                 database.Message(
-                    exercise=exercise_obj, role=message["role"], text=message["content"]
+                    exercise=exercise_obj,
+                    role=message["role"],
+                    text=message["content"],
+                    message_type=message["message_type"],
                 )
                 for message in messages
             ]
@@ -168,7 +190,7 @@ def start_exercise(n_clicks, level, topic, duration):
         "success",
         -1,
         start_time,
-        title,
+        title["content"],
         exercise,
         {"display": "none"},
         {"display": "block"},

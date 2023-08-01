@@ -38,10 +38,14 @@ class Exercise(Base):
     __tablename__ = "exercises"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(User.id))
+    user_id = sqlalchemy.Column(
+        sqlalchemy.Integer, sqlalchemy.ForeignKey(User.id), nullable=False
+    )
     start_timestamp = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     end_timestamp = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     title = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+
+    messages = relationship("Message", backref="exercise")
 
     def __repr__(self) -> str:
         return f"id={self.id}: By user: {self.user}, started at: {self.start_timestamp}"
@@ -53,9 +57,12 @@ class Message(Base):
     __tablename__ = "message"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    exercise = sqlalchemy.ForeignKey(Exercise.id)
+    exercise_id = sqlalchemy.Column(
+        sqlalchemy.Integer, sqlalchemy.ForeignKey(Exercise.id), nullable=False
+    )
     role = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
     text = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+    message_type = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
 
 def hash_password(password: str) -> bytes:

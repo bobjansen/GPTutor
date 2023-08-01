@@ -1,8 +1,8 @@
 """Access the GPT API"""
 import openai
-import settings
+import app_globals
 
-openai.api_key = settings.app_settings["openai_key"]
+openai.api_key = app_globals.app_settings["openai_key"]
 
 
 def choose_model():
@@ -12,6 +12,10 @@ def choose_model():
 
 def get_completion(messages):
     """Get the completion given the messages"""
+    # Strip out metadata added on our side.
+    messages = [
+        {"role": message["role"], "content": message["content"]} for message in messages
+    ]
     response = openai.ChatCompletion.create(
         model=choose_model(), messages=messages, n=1
     )
