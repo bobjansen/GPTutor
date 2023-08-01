@@ -19,6 +19,8 @@ the GPT4 API becomes available.
 
 # TODO
 
+- Disable the start button when the exercise is loaded. Now a double tap on the
+  start button will cancel displaying the result of the first click.
 - Improve the prompts
 - Add topics
 - Improve the design
