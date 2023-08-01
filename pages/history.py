@@ -36,6 +36,7 @@ def layout(hid: Optional[str] = None) -> dbc.Container:
         .query(database.Exercise)
         .where(user["id"] == database.Exercise.user_id)
         .where(hid == database.Exercise.id)
+        .order_by(sqlalchemy.desc(database.Exercise.id))
         .first()
     )
 
