@@ -44,17 +44,33 @@ def layout(hid: Optional[str] = None) -> dbc.Container:
         return dbc.Container()
 
     exercise_title = [
-        message.text
+        message.text.strip()
         for message in exercise.messages
         if message.message_type == int(MessageType.EXERCISE_TITLE)
     ]
 
     exercise_body = [
-        message.text
+        message.text.strip()
         for message in exercise.messages
         if message.message_type == MessageType.INITIAL_EXERCISE
     ]
-    return dbc.Container([html.H1(exercise_title), html.P(exercise_body)])
+
+    exercise_answer = [
+        message.text.strip()
+        for message in exercise.messages
+        if message.message_type == MessageType.EXERCISE_EVAL
+    ]
+
+    if len(exercise_answer) == 0 or exercise_answer[0] == "":
+        return dbc.Container([html.H1(exercise_title), html.P(exercise_body)])
+    return dbc.Container(
+        [
+            html.H1(exercise_title),
+            html.P(exercise_body),
+            html.Hr(),
+            html.P(exercise_answer),
+        ]
+    )
 
 
 def format_title(title):
