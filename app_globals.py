@@ -11,6 +11,8 @@ class MessageType(IntEnum):
     INITIAL_EXERCISE = 2
     ASK_TITLE = 3
     EXERCISE_TITLE = 4
+    EXERCISE_ANSWER = 5
+    EXERCISE_EVAL = 6
 
 
 try:

@@ -2,7 +2,7 @@
 from typing import Dict, List
 import flask
 import time
-from dash import callback, dcc, html, register_page, Output, Input, State
+from dash import callback, dcc, exceptions, html, register_page, Output, Input, State
 import dash_bootstrap_components as dbc
 import sqlalchemy
 
@@ -100,6 +100,8 @@ def layout():
             ],
             className="d-grid gap-2 d-md-flex justify-content-md-start",
         ),
+        html.Div(style={"height": "20px"}),
+        html.Div(id="exercise-eval"),
         dcc.Store("timer-start-in-seconds"),
     ]
 
@@ -114,6 +116,7 @@ def layout():
         Output("exercise-description", "children"),
         Output("exercise-options", "style"),
         Output("exercise-main", "style"),
+        Output("exercise-eval", "children"),
     ],
     [
         Input("start-button", "n_clicks"),
@@ -122,22 +125,55 @@ def layout():
         State("level-dropdown", "value"),
         State("topic-dropdown", "value"),
         State("time-dropdown", "value"),
+        State("exercise-answer", "value"),
     ],
     prevent_initial_call=True,
 )
-def start_exercise(n_clicks, level, topic, duration):
+def start_exercise(n_clicks, level, topic, duration, answer):
     """Start the exercise: show the result of the prompt and start the timer"""
-    if n_clicks % 2 == 0:
-        return [
-            "Start",
-            "primary",
-            0,
-            None,
-            "",
-            "",
-            {"display": "block"},
-            {"display": "none"},
-        ]
+    user = flask.session.get("user")
+    if n_clicks == 0:
+        raise exceptions.PreventUpdate
+    elif n_clicks % 2 == 0:
+        if user is not None:
+            with database.Session(database.engine) as session:
+                exercise = (
+                    session.query(database.Exercise)
+                    .order_by(sqlalchemy.desc(database.Exercise.id))
+                    .limit(1)
+                    .first()
+                )
+                answer = answer.strip()
+                new_message = database.Message(
+                    exercise_id=exercise.id,
+                    role="user",
+                    text=answer,
+                    message_type=MessageType.EXERCISE_ANSWER,
+                )
+                session.add(new_message)
+                messages = exercise.messages + [new_message]
+                response = gpt.get_completion(messages)["message"]
+                session.add(
+                    database.Message(
+                        exercise_id=exercise.id,
+                        role="assistant",
+                        text=response["content"],
+                        message_type=MessageType.EXERCISE_EVAL,
+                    )
+                )
+                session.commit()
+            print(f'{response["content"]=}')
+            return [
+                "Start",
+                "primary",
+                0,
+                None,
+                "",
+                "",
+                {"display": "block"},
+                {"display": "none"},
+                response["content"],
+            ]
 
     prompt = ask_exercise.format(level, topic, duration)
     messages = [
@@ -164,7 +200,6 @@ def start_exercise(n_clicks, level, topic, duration):
 
     start_time = time.time()
 
-    user = flask.session.get("user")
     if user is not None:
         with database.Session(database.engine) as session:
             # noinspection PyTypeChecker
@@ -196,6 +231,7 @@ def start_exercise(n_clicks, level, topic, duration):
         exercise,
         {"display": "none"},
         {"display": "block"},
+        "",
     ]
 
 

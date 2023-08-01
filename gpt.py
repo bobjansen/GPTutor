@@ -12,10 +12,16 @@ def choose_model():
 
 def get_completion(messages):
     """Get the completion given the messages"""
+
     # Strip out metadata added on our side.
-    messages = [
-        {"role": message["role"], "content": message["content"]} for message in messages
-    ]
+    def convert_element(elem):
+        """Convert an element in a message list to something that can be sent to OpenAI"""
+        if isinstance(messages[0], dict):
+            return {"role": elem["role"], "content": elem["content"]}
+        return {"role": elem.role, "content": elem.text}
+
+    messages = [convert_element(message) for message in messages]
+
     response = openai.ChatCompletion.create(
         model=choose_model(), messages=messages, n=1
     )
